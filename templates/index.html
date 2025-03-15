@@ -4,12 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload de Arquivos Word</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <script>
+
+    function atualizarListaArquivos() {
+        const input = document.getElementById('file-input');
+        const lista = document.getElementById('file-list');
+        lista.innerHTML = '';
+
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const item = document.createElement('div');
+            item.classList.add('file-item');
+            item.innerHTML = `
+                <span class="file-name">${file.name}</span>
+                <button class="remove-btn" onclick="removerArquivo(${i})">X</button>
+            `;
+            lista.appendChild(item);
+        }
+    }
+
+    function removerArquivo(index) {
+        const input = document.getElementById('file-input');
+        const lista = Array.from(input.files);
+        lista.splice(index, 1);
+
+        const dataTransfer = new DataTransfer();
+        lista.forEach(file => dataTransfer.items.add(file));
+        input.files = dataTransfer.files;
+
+        atualizarListaArquivos();
+    }
+
+    function apagarArquivos() {
+        fetch('/delete_all', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || data.error);
+                reload(); // Recarrega a página após apagar os arquivos
+            })
+            .catch(error => alert("Erro ao apagar arquivos"));
+    }
+
+    function reload() {
+        location.reload();
+    }
+
+
+    </script>
 </head>
 <body>
-    <h1>Envie seus arquivos Word para conversão</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="files" multiple><br><br>
-        <button type="submit">Enviar Arquivos</button>
-    </form>
+    <div class="container">
+        <h1>Envie seus arquivos Word para conversão</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" id="file-input" name="files" multiple onchange="atualizarListaArquivos()"><br><br>
+            <div id="file-list"></div>
+            <button type="submit">Enviar Arquivos</button>
+        </form>
+        <br>
+        <button id="delete-btn" onclick="apagarArquivos(), reload()">Apagar Todos os Arquivos</button>
+    </div>
 </body>
 </html>
